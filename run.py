@@ -16,16 +16,13 @@ outputs_path = os.path.join(data_path, 'outputs')
 if not os.path.exists(outputs_path):
     os.mkdir(outputs_path)
 
-#Chose between 1_Newcastle, 2_Norwich, 3_Inverness, 4_Cardiff
-
 #Set model specific data paths
-local_path = os.path.join(inputs_path,'3_Dafni_Results','2080','SSP2')
-flood_impact_path = os.path.join(local_path, 'flood_impact')
+flood_impact_path = os.path.join(inputs_path, 'flood_impact')
 dd_curves_path = os.path.join(inputs_path, 'dd-curves')
 grid_path = os.path.join(inputs_path,'grid')
-run_path = os.path.join(local_path, 'run')
+run_path = os.path.join(inputs_path, 'run')
 uprn_lookup = glob(os.path.join(inputs_path, 'uprn', '*.csv'))
-parameters_path=os.path.join(local_path,'parameters')
+parameters_path=os.path.join(inputs_path,'parameters')
 
 # Identify the CityCat output raster
 archive = glob(run_path + "max_depth.tif", recursive = True)
