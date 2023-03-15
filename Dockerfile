@@ -7,6 +7,6 @@ WORKDIR src
 COPY environment.yml .
 RUN conda env update -f environment.yml -n base
 
-COPY script.py .
+COPY run.py .
 
-CMD [ "python", "script.py"]
+CMD [ "python", "run.py"]
