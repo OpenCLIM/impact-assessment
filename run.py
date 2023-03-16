@@ -25,7 +25,7 @@ uprn_lookup = glob(os.path.join(inputs_path, 'uprn', '*.csv'))
 parameters_path=os.path.join(inputs_path,'parameters')
 
 # Identify the CityCat output raster
-archive = glob(run_path, "max_depth.tif", recursive = True)
+archive = glob(run_path + "/max_depth.tif", recursive = True)
 
 # Set buffer and threshold for the buildings
 threshold = float(os.getenv('THRESHOLD'))
