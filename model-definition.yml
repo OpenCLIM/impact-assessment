@@ -77,7 +77,7 @@ spec:
         description:
           The 1km OS grid cells for the UK.
         default:
-          - 7358511d-76ec-484b-8996-66af6e6ea8de
+          - 0c6275e1-1557-4b5a-9548-7c6c87309368
         path: inputs/grids/
         required: false
         
