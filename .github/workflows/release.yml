@@ -1,0 +1,32 @@
+name: Upload to DAFNI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Upload to DAFNI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Docker Build
+        run: docker build -t flood-impact-assessment .
+
+      - name: Compress docker image
+        run: docker save flood-impact-assessment | gzip > flood-impact-assessment.tar.gz
+
+      - name: Set tag as env
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Upload to DAFNI
+        uses: dafnifacility/dafni-model-uploader@v1.9
+        with:
+          definition-path: './model-definition.yml'
+          image-path: './flood-impact-assessment.tar.gz'
+          username: ${{ secrets.DAFNI_SERVICE_ACCOUNT_USERNAME }}
+          password: ${{ secrets.DAFNI_SERVICE_ACCOUNT_PASSWORD }}
+          version-message: ${{ env.TAG }}
+          parent-model: "00e701eb-eb0e-4bec-be66-156e0042fab3"
