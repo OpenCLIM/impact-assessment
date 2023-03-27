@@ -64,8 +64,9 @@ with rio.open(archive[0]) as max_depth :
     if 'toid_numbe' in columns:
         e_builds['toid'] = 'osgb' + e_builds['toid_numbe'].astype(str)
         e_builds.pop('toid_numbe')
-    e_builds['building_u'] = e_builds['building_use']
-    e_builds.pop('building_use')
+    if 'building_use' in columns:
+        e_builds['building_u'] = e_builds['building_use']
+        e_builds.pop('building_use')
 
     # If there are udm buildings within the flood impact folder, read them in
     if len(buildings) == 2 :
