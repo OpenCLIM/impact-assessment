@@ -57,8 +57,13 @@ with rio.open(archive[0]) as max_depth :
     e_builds = os.path.join(flood_impact_path, 'buildings_exist.gpkg')
     e_builds = gpd.read_file(e_builds, bbox=max_depth.bounds)
     # Redefine the toid number to include osgb
-    e_builds['toid'] = 'osgb' + e_builds['toid_number'].astype(str)
-    e_builds.pop('toid_number')
+    columns=list(e_builds.columns)
+    if 'toid_number' in columns:
+        e_builds['toid'] = 'osgb' + e_builds['toid_number'].astype(str)
+        e_builds.pop('toid_number')
+    if 'toid_numbe' in columns:
+        e_builds['toid'] = 'osgb' + e_builds['toid_numbe'].astype(str)
+        e_builds.pop('toid_numbe')
     e_builds['building_u'] = e_builds['building_use']
     e_builds.pop('building_use')
 
