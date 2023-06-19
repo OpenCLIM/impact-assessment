@@ -4,6 +4,7 @@ from glob import glob
 import pandas as pd
 import rasterio as rio
 from rasterio import features
+from rasterio.crs import CRS
 from rasterstats import zonal_stats as zs
 import geopandas as gpd
 import numpy as np
@@ -53,7 +54,10 @@ if len(parameter_file) == 1 :
     depth1 = parameters.loc[5][1]
 
 # Read in the baseline builings
-with rio.open(archive[0]) as max_depth :
+with rio.open(archive[0],'r+') as max_depth :
+    # Set crs of max_depth raster
+    max_depth.crs = CRS.from_epsg(27700)
+    # Find existing buildings
     e_builds = os.path.join(flood_impact_path, 'buildings_exist.gpkg')
     e_builds = gpd.read_file(e_builds, bbox=max_depth.bounds)
     # Redefine the toid number to include osgb
@@ -78,6 +82,7 @@ with rio.open(archive[0]) as max_depth :
         u_builds['toid'] = 'osgb' + u_builds['index'].astype(str)
         # Note all buildings as type 'residential'
         u_builds['building_u'] = 'residential'
+        u_builds.crs = e_builds.crs
         # Merge the existing and building datasets
         all_buildings = u_builds.append(e_builds)
     else :
@@ -131,13 +136,6 @@ with rio.open(archive[0]) as max_depth :
             all_buildings.depth, nonresidential.depth, nonresidential.damage
         ) * all_buildings.original_area).round(0)).astype(int)
 
-    # Create a new data frame called centres which is a copy of buildings
-    building_centroid=all_buildings.filter(['building_u','geometry_copy','damage','depth'])
-    building_centroid['geometry'] = building_centroid['geometry_copy']
-    building_centroid.pop('geometry_copy')
-    building_centroid.crs=all_buildings.crs
-    all_buildings.pop('geometry_copy')
-
     # Get the flooded perimeter length for each building
     flooded_perimeter = gpd.overlay(gpd.GeoDataFrame({'toid': all_buildings.toid}, geometry=all_buildings.geometry.boundary,
                                                     crs=all_buildings.crs), flooded_areas)
@@ -155,34 +153,37 @@ with rio.open(archive[0]) as max_depth :
                         dtype={'IDENTIFIER_1': str}).rename(columns={'IDENTIFIER_1': 'uprn',
                                                                         'IDENTIFIER_2': 'toid'})
         all_buildings = all_buildings.merge(uprn, how='left')
+
+    # Create a new data frame called centres which is a copy of buildings
+    building_centroid=all_buildings.filter(['building_u','geometry_copy','damage','depth'])
+    building_centroid['geometry'] = building_centroid['geometry_copy']
+    building_centroid.pop('geometry_copy')
+    building_centroid.crs=e_builds.crs
+    all_buildings.pop('geometry_copy')
+
+    building_centroid['building_u']=building_centroid['building_u'].fillna('unknown')
     
     # Save building centroids and their geometrys to CSV
-    building_centroid.to_csv(
-        os.path.join(outputs_path, 'affected_buildings_' + location + '_' + ssp + '_'  + year + '_' + depth1 +'mm.csv'), index=False,  float_format='%g') 
+    # building_centroid.to_csv(
+    #     os.path.join(outputs_path, 'affected_buildings_' + location + '_' + ssp + '_'  + year + '_' + depth1 +'mm.csv'), index=False,  float_format='%g') 
     
     # Read in the 1km OS grid cells
     km_grid = glob(grid_path + "/*.gpkg", recursive = True)
     grid = gpd.read_file(km_grid[0],bbox=max_depth.bounds)
+    grid.set_crs(epsg=27700, inplace=True)
 
+# Create a geo dataframe for the centroids
+centre = gpd.GeoDataFrame(building_centroid,geometry="geometry",crs="EPSG:27700")
 
 # Apply the centroid function to the geometry column to determin the centre of each polygon
-building_centroid.geometry=building_centroid['geometry'].centroid
-# Ensure buildings and the new data frame have the same coordinate system
-#building_centroid.crs=buildings.crs
-# Redefine the index layer with sequential numbers
-building_centroid=building_centroid.assign(Index=range(len(building_centroid))).set_index('Index')
+centre.geometry=centre['geometry'].centroid
 
 grid.set_crs(epsg=27700, inplace=True)
-building_centroid.set_crs(epsg=27700, inplace=True)
 
-pointsInPolygon = gpd.sjoin(grid,building_centroid, how="inner", op="intersects")
-
-pointsInPolygon['building_u']=pointsInPolygon['building_u'].fillna('unknown')
-
-print('pointsInPolygon:', pointsInPolygon.head())
+pointsInPolygon = gpd.sjoin(grid,centre, how="left", op="intersects")
 
 dfpivot = pd.pivot_table(pointsInPolygon,index='tile_name',
-                         columns='building_u',aggfunc={'building_u':len}, fill_value=0)
+                        columns='building_u',aggfunc={'building_u':len}, fill_value=0)
 
 dfpivot2 = pd.pivot_table(pointsInPolygon,index='tile_name', aggfunc={'damage':np.sum,                                                                
                                                                     'depth':np.average,
@@ -190,44 +191,46 @@ dfpivot2 = pd.pivot_table(pointsInPolygon,index='tile_name', aggfunc={'damage':n
 
 stacked = dfpivot.stack(level = [0])
 
+half_data=pd.DataFrame()
+all_data=pd.DataFrame()
+
 half_data = pd.merge(stacked,grid, on='tile_name')
 all_data = pd.merge(dfpivot2,half_data, on='tile_name')
 
-list=list(all_data.columns.values)
-print('List:',list)
+check = list(all_data.columns.values)
 
 all_data['Total_Building_Count'] = all_data['index_right']
 all_data.pop('index_right')
 
-if 'residential' in list:
+if 'residential' in check:
     all_data['Residential_Count'] = all_data['residential']
     all_data.pop('residential')
 else:
-   all_data['Residential_Count']=[0 for n in range(len(all_data))]
+    all_data['Residential_Count']=[0 for n in range(len(all_data))]
 
-if 'non-residential' in list:
+if 'non-residential' in check:
     all_data['Non_Residential_Count'] = all_data['non-residential']
     all_data.pop('non-residential')
 else:
-   all_data['Non_Residential_Count']=[0 for n in range(len(all_data))]
+    all_data['Non_Residential_Count']=[0 for n in range(len(all_data))]
 
-if 'mixed' in list:
+if 'mixed' in check:
     all_data['Mixed_Count'] = all_data['mixed']
     all_data.pop('mixed')
 else:
-   all_data['Mixed_Count']=[0 for n in range(len(all_data))]
+    all_data['Mixed_Count']=[0 for n in range(len(all_data))]
 
-if 'unclassified' in list:   
+if 'unclassified' in check:   
     all_data['Unclassified_Count'] = all_data['unclassified']
     all_data.pop('unclassified')
 else:
-   all_data['Unclassified_Count']=[0 for n in range(len(all_data))]
+    all_data['Unclassified_Count']=[0 for n in range(len(all_data))]
 
-if 'unknown' in list:   
+if 'unknown' in check:   
     all_data['Unknown_Count'] = all_data['unknown']
     all_data.pop('unknown')
 else:
-   all_data['Unknown_Count']=[0 for n in range(len(all_data))]
+    all_data['Unknown_Count']=[0 for n in range(len(all_data))]
 
 
 all_data['Damage'] = all_data['damage']
