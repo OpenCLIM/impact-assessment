@@ -129,23 +129,26 @@ with rio.open(archive[0],'r+') as max_depth :
     nonresidential = pd.read_csv(os.path.join(dd_curves_path, 'nonresidential.csv'))
 
     # Calculate damage based on property types
-    all_buildings['damage'] = (np.interp(
-        all_buildings.depth, residential.depth, residential.damage) * all_buildings.original_area).round(0)
-    all_buildings['damage'] = all_buildings['damage'].where(
-        all_buildings.building_u != 'residential', (np.interp(
-            all_buildings.depth, nonresidential.depth, nonresidential.damage
-        ) * all_buildings.original_area).round(0)).astype(int)
+    res_data = all_buildings.loc[all_buildings['building_u']=='residential']
+    non_res_data = all_buildings.loc[all_buildings['building_u']!='residential']
 
-    # Get the flooded perimeter length for each building
-    flooded_perimeter = gpd.overlay(gpd.GeoDataFrame({'toid': all_buildings.toid}, geometry=all_buildings.geometry.boundary,
-                                                    crs=all_buildings.crs), flooded_areas)
-    flooded_perimeter['flooded_perimeter'] = flooded_perimeter.geometry.length.round(2)
+    res_data['damage'] = (np.interp(
+        res_data.depth, residential.depth, residential.damage) * res_data.original_area).round(0)
+    non_res_data['damage'] = (np.interp(
+        non_res_data.depth, nonresidential.depth, nonresidential.damage) * non_res_data.original_area).round(0).astype(int)
 
-    all_buildings['perimeter'] = all_buildings.geometry.length
+    all_buildings=res_data.append(non_res_data)
 
-    all_buildings = all_buildings.merge(flooded_perimeter, on='toid', how='left')
-    all_buildings['flooded_perimeter'] = all_buildings.flooded_perimeter.divide(
-        all_buildings.perimeter).fillna(0).multiply(100).round(0).astype(int)
+    # # Get the flooded perimeter length for each building
+    # flooded_perimeter = gpd.overlay(gpd.GeoDataFrame({'toid': all_buildings.toid}, geometry=all_buildings.geometry.boundary,
+    #                                                 crs=all_buildings.crs), flooded_areas)
+    # flooded_perimeter['flooded_perimeter'] = flooded_perimeter.geometry.length.round(2)
+
+    # all_buildings['perimeter'] = all_buildings.geometry.length
+
+    # all_buildings = all_buildings.merge(flooded_perimeter, on='toid', how='left')
+    # all_buildings['flooded_perimeter'] = all_buildings.flooded_perimeter.divide(
+    #     all_buildings.perimeter).fillna(0).multiply(100).round(0).astype(int)
 
     # Lookup UPRN if available
     if len(uprn_lookup) > 0:
