@@ -7,6 +7,7 @@ from rasterio import features
 from rasterio.crs import CRS
 from rasterstats import zonal_stats as zs
 import geopandas as gpd
+import shutil
 import numpy as np
 from shapely.geometry import shape
 
