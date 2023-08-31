@@ -41,6 +41,11 @@ buildings = glob(flood_impact_path + "/*.gpkg", recursive = True)
 # Search for a parameter file which outline the input parameters defined by the user
 parameter_file = glob(parameters_path + "/*.csv", recursive = True)
 print('parameter_file:', parameter_file)
+
+# Define output path for parameters
+parameters_out_path=os.path.join(outputs_path,'parameters')
+if not os.path.exists(parameters_out_path):
+    os.mkdir(parameters_out_path)
  
 # If the parameter file exists, read in the location, chosen SSP, year and storm event
 if len(parameter_file) == 1 :
@@ -48,6 +53,10 @@ if len(parameter_file) == 1 :
     print('Filepath:',file_path)
     filename=file_path[0].split("/")
     print('Filename:',filename[-1])
+
+    src = parameter_file[0]
+    dst = os.path.join(outputs_parameters_data,filename[-1] + '.csv')
+    shutil.copy(src,dst)
 
     parameters = pd.read_csv(os.path.join(parameters_path + '/' + filename[-1] + '.csv'))
     location = parameters.loc[0][1]
@@ -272,6 +281,7 @@ if len(constraints)==1:
     src = constraints[0]
     dst = os.path.join(udm_para_out_path,'constraints.csv')
     shutil.copy(src,dst)
+    
 
 all_data.to_csv(
     os.path.join(outputs_path, '1km_data_' + location + '_' + ssp + '_'  + year + '_' + depth1 +'mm.csv'), index=False,  float_format='%g') 
