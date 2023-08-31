@@ -55,7 +55,7 @@ if len(parameter_file) == 1 :
     print('Filename:',filename[-1])
 
     src = parameter_file[0]
-    dst = os.path.join(outputs_parameters_data,filename[-1] + '.csv')
+    dst = os.path.join(parameters_out_path,filename[-1] + '.csv')
     shutil.copy(src,dst)
 
     parameters = pd.read_csv(os.path.join(parameters_path + '/' + filename[-1] + '.csv'))
