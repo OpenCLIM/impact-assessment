@@ -92,3 +92,13 @@ spec:
           Total Damage per OS 1km grid within the domain. 
           A count of the number of each building type affected within each OS 1km grid. 
           Average max_depth recorded in each OS 1km grid.
+
+      - name: outputs/parameters/*
+        type: folder
+        description:
+          All parameters and their values are stored in a csv file.
+
+      - name: outputs/udm_parameters/*
+        type: folder
+        description:
+          A series of csv files outlinning the parameters and values used by the Urban Development Workflow to generate the dataset.
