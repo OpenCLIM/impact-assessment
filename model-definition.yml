@@ -31,15 +31,13 @@ spec:
         title: Location
         type: string
         description: The city/location of interest.
-        default: Newcastle
-        required: true
+        required: false
 
       - name: YEAR
         title: Year
         type: number
         description: The year of interest (range 2030-2080).
-        default: 2050
-        required: true
+        required: false
         options:
           - name: 2020
             title: 2020
@@ -60,8 +58,7 @@ spec:
         title: SSP
         type: string
         description: The socio-economic pathway of interest.
-        default: 'ssp1'
-        required: true
+        required: false
         options:
           - name: 'baseline'
             title: 'baseline'
@@ -75,14 +72,13 @@ spec:
             title: 'ssp4'
           - name: 'ssp5'
             title: 'ssp5'
-
-        - name: TOTAL_DEPTH
+      
+      - name: TOTAL_DEPTH
           title: Total depth (mm)
           description:
             The total depth of rainfall during the event.
             #This parameter is only used if `RAINFALL_MODE` is set to "total_depth".
           type: number
-          default: 40
           required: false
           min: 10
           max: 100
