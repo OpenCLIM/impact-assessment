@@ -74,14 +74,15 @@ spec:
             title: 'ssp5'
       
       - name: TOTAL_DEPTH
-          title: Total depth (mm)
-          description:
-            The total depth of rainfall during the event.
-            #This parameter is only used if `RAINFALL_MODE` is set to "total_depth".
-          type: number
-          required: false
-          min: 10
-          max: 100
+        title: Total depth (mm)
+        description:
+          The total depth of rainfall during the event.
+          #This parameter is only used if `RAINFALL_MODE` is set to "total_depth".
+        type: number
+        default: 40
+        required: false
+        min: 10
+        max: 100
 
     dataslots:
       - name: Parameters
