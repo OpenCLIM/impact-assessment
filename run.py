@@ -28,7 +28,7 @@ parameters_path=os.path.join(inputs_path,'parameters')
 udm_para_in_path = os.path.join(inputs_path, 'udm_parameters')
 
 # Identify the CityCat output raster
-archive = glob(run_path + "/max_depth.tif", recursive = True)
+archive = glob(run_path + "/*.tif", recursive = True)
 
 # Set buffer and threshold for the buildings
 threshold = float(os.getenv('THRESHOLD'))
@@ -62,7 +62,13 @@ if len(parameter_file) == 1 :
     location = parameters.loc[0][1]
     ssp = parameters.loc[1][1]
     year = parameters.loc[2][1]
-    depth1 = parameters.loc[5][1]
+    depth1 = parameters.loc[4][1]
+    
+if len(parameter_file) == 0:
+    location = os.getenv('LOCATION')
+    ssp = os.getenv('SSP')
+    year = os.getenv('YEAR')
+    depth1 = os.getenv('TOTAL_DEPTH')
 
 # Read in the baseline builings
 with rio.open(archive[0],'r+') as max_depth :
@@ -196,6 +202,8 @@ grid.set_crs(epsg=27700, inplace=True)
 
 pointsInPolygon = gpd.sjoin(grid,centre, how="left", op="intersects")
 
+pointsInPolygon=pointsInPolygon.fillna(0)
+
 dfpivot = pd.pivot_table(pointsInPolygon,index='tile_name',
                         columns='building_u',aggfunc={'building_u':len}, fill_value=0)
 
@@ -213,7 +221,7 @@ all_data = pd.merge(dfpivot2,half_data, on='tile_name')
 
 check = list(all_data.columns.values)
 
-all_data['Total_Building_Count'] = all_data['index_right']
+#all_data['Total_Building_Count'] = all_data['index_right']
 all_data.pop('index_right')
 
 if 'residential' in check:
@@ -246,6 +254,8 @@ if 'unknown' in check:
 else:
     all_data['Unknown_Count']=[0 for n in range(len(all_data))]
 
+all_data['Total_Building_Count'] = (all_data['Residential_Count'] + all_data['Non_Residential_Count'] +
+        all_data['Mixed_Count'] + all_data['Unclassified_Count'] + all_data['Unknown_Count'])
 
 all_data['Damage'] = all_data['damage']
 all_data.pop('damage')
