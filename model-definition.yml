@@ -84,6 +84,14 @@ spec:
         min: 10
         max: 100
 
+      - name: DTM_RESOLUTION
+        title: DTM Resolution (m)
+        description:
+          The size of each cell in the DTM raster.
+        type: number
+        default: 5
+        required: true
+        
     dataslots:
       - name: Parameters
         description:
