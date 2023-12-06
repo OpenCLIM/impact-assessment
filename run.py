@@ -48,7 +48,7 @@ def process_data(ev):
     print('..creating spatial index..')
     
     #Find the csv file:
-    csv_lookup = glob(os.path.join(run_path, '/*/*.csv'))
+    csv_lookup = glob(os.path.join(run_path, '*/*.csv'))
      
     #first get the resolution of the grid:
     df_res = pd.read_csv(csv_lookup[0], nrows = 3)
