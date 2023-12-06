@@ -2,6 +2,8 @@ kind: M
 api_version: v1beta3
 metadata:
   display_name: Urban_Flooding:Flood Impact Assessment
+  contact_point_name: Olivia Butters
+  contact_point_email: olivia.butters@newcastle.ac.uk
   publisher: Newcastle University
   name: flood-impact-assessment
   summary: Assess flood impacts using OS MasterMap
