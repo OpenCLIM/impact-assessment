@@ -48,7 +48,9 @@ def process_data(ev):
     print('..creating spatial index..')
     
     #Find the csv file:
-    csv_lookup = glob(os.path.join(run_path, '*/*.csv'))
+    csv_lookup = glob(os.path.join(run_path, '*/*.csv'),recursive=True)
+    print('csv_lookup',csv_lookup)
+    
      
     #first get the resolution of the grid:
     df_res = pd.read_csv(csv_lookup[0], nrows = 3)
@@ -387,17 +389,29 @@ pointsInPolygon=pointsInPolygon.fillna(0)
 dfpivot = pd.pivot_table(pointsInPolygon,index='tile_name',
                         columns='building_u',aggfunc={'building_u':len}, fill_value=0)
 
+dfpivot3 = pd.pivot_table(pointsInPolygon,index='tile_name',
+                        columns='Class',aggfunc={'Class':len}, fill_value=0)
+
 dfpivot2 = pd.pivot_table(pointsInPolygon,index='tile_name', aggfunc={'damage':np.sum,                                                                
                                                                     'depth':np.average,
                                                                     'index_right':len}, fill_value=0)
 
 stacked = dfpivot.stack(level = [0])
+stacked2 = dfpivot3.stack(level = [0])
 
 half_data=pd.DataFrame()
+half_data2=pd.DataFrame()
 all_data=pd.DataFrame()
 
 half_data = pd.merge(stacked,grid, on='tile_name')
+half_data2 = pd.merge(stacked2,grid, on='tile_name')
 all_data = pd.merge(dfpivot2,half_data, on='tile_name')
+all_data = pd.merge(all_data,half_data2, on='tile_name')
+
+all_data.pop('0_x')
+all_data.pop('0_y')
+all_data.pop('id_y')
+all_data.pop('geometry_y')
 
 check = list(all_data.columns.values)
 
