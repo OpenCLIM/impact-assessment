@@ -131,11 +131,17 @@ spec:
         path: inputs/dd-curves
         required: true
 
-      - name: Maximum depth a
+      - name: Maximum depth
         description:
           Maximum depth raster in GeoTIFF format.
           The file must be named "max_depth.tif".
         path: inputs/run
+        required: false
+
+      - name: Maximum depth csv
+        description:
+          Maximum depth data in csv format.
+        path: inputs/run/test
         required: false
 
       - name: Grids
